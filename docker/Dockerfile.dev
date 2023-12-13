@@ -58,6 +58,7 @@ COPY my_project_name/__init__.py /src/my_project_name/
 COPY README.md my-project-name /src/
 COPY setup.py /src/setup.py
 RUN pip install -e "/src/.[postgres]"
+RUN pip install requests
 
 # Now copy the source code
 COPY my_project_name/*.py /src/my_project_name/
