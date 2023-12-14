@@ -1,7 +1,7 @@
 import logging
 from typing import Optional, Union
 
-from markdown import markdown
+import markdown2
 from nio import (
     AsyncClient,
     ErrorResponse,
@@ -67,7 +67,11 @@ async def send_text_to_room(
     }
 
     if markdown_convert:
-        content["formatted_body"] = markdown(message)
+        content["formatted_body"] = markdown2.markdown(message, extras={
+            'breaks': {'on_newline': True, 'on_backslash': True},
+            'fenced-code-blocks':{}
+            })
+        logger.info(f'formatted\n{content["formatted_body"]}')
 
     if reply_to_event_id:
         content["m.relates_to"] = {"m.in_reply_to": {"event_id": reply_to_event_id}}

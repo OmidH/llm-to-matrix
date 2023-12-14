@@ -32,7 +32,7 @@ setup(
     packages=find_packages(exclude=["tests", "tests.*"]),
     install_requires=[
         "matrix-nio[e2e]>=0.10.0",
-        "Markdown>=3.1.1",
+        "Markdown2[all]>=2.4.11",
         "PyYAML>=5.1.2",
     ],
     extras_require={
