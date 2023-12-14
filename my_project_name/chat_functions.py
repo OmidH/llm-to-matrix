@@ -15,6 +15,19 @@ from nio import (
 logger = logging.getLogger(__name__)
 
 
+async def send_typing_to_room(
+    client: AsyncClient,
+    room_id: str,
+    is_typing: bool,
+    timeout: int = 30000
+):
+    """Send typing event to room"""
+    try:
+        return await client.room_typing(room_id, is_typing, timeout)
+    except SendRetryError:
+        logger.exception(f"Unable to send typing message response to {room_id}")
+    
+
 async def send_text_to_room(
     client: AsyncClient,
     room_id: str,

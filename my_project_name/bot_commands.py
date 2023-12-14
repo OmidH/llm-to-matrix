@@ -1,6 +1,6 @@
-from nio import AsyncClient, MatrixRoom, RoomMessageText, RoomSendResponse
+from nio import AsyncClient, MatrixRoom, RoomMessageText
 
-from my_project_name.chat_functions import react_to_event, send_text_to_room
+from my_project_name.chat_functions import react_to_event, send_text_to_room, send_typing_to_room
 from my_project_name.config import Config
 from my_project_name.storage import Storage
 
@@ -66,27 +66,38 @@ class Command:
 
     async def _query_llm(self):
         """Make the bot forward the query to llm and wait for an answer"""
-        model = 'stablelm-zephyr-3b:latest'
-        payload = {
-            "model": model,
-            "prompt": "".join(self.args),
-            "stream": False
-        }
-        headers = {
-            "content-type": "application/json",
-            "cache-control": "no-cache",
-        }
-        url = "http://host.docker.internal:11434/api/generate"
-        
-        response = requests.request("POST", url, data=json.dumps(payload), headers=headers)
-        json_data = response.json()  # Verwendet die .json()-Methode, um den JSON-Inhalt zu analysieren
 
-        response = (json_data['response'])
-        await send_text_to_room(self.client, self.room.room_id, response)
+        await send_typing_to_room(self.client, self.room.room_id, True, 60000)
 
-        toks_per_sek = round(int(json_data["eval_count"]) / int(json_data["eval_duration"]),2)
+        try:
+            model = 'stablelm-zephyr-3b:latest'
+            payload = {
+                "model": model,
+                "prompt": " ".join(self.args),
+                "stream": False
+            }
+            headers = {
+                "content-type": "application/json",
+                "cache-control": "no-cache",
+            }
+            url = "http://localhost:11434/api/generate" #"http://host.docker.internal:11434/api/generate"
+            response = requests.request("POST", url, data=json.dumps(payload), headers=headers)
 
-        await send_text_to_room(self.client, self.room.room_id, f'>Your request took {round(int(json_data["eval_duration"])/1000000000,3)} seconds and generated {toks_per_sek} tokens/s')
+            if (200 <= int(response.status_code) < 300):
+                json_data = response.json()
+                await send_typing_to_room(self.client, self.room.room_id, False)
+                response = (json_data['response'])
+                await send_text_to_room(self.client, self.room.room_id, response)
+                toks_per_sek = int(json_data["eval_count"]) / int(json_data["eval_duration"])
+                await send_text_to_room(self.client, self.room.room_id, f'>Your request took {round(int(json_data["eval_duration"])/1000000000,3)} seconds and generated {toks_per_sek} tokens/s')
+            else:
+                await send_typing_to_room(self.client, self.room.room_id, False)
+                await send_text_to_room(self.client, self.room.room_id, f"An error occurred while fetching the API({response.status_code}): {response}")
+    
+        except requests.RequestException as e :  
+            await send_typing_to_room(self.client, self.room.room_id, False)
+            await send_text_to_room(self.client, self.room.room_id, f"An unknown error: {e}")
+            print('Error Occurred', e)
 
     async def _echo(self):
         """Echo back the command's arguments"""
