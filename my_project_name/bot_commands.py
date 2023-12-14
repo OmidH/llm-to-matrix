@@ -1,13 +1,14 @@
-from nio import AsyncClient, MatrixRoom, RoomMessageText
-
-from my_project_name.chat_functions import react_to_event, send_text_to_room, send_typing_to_room
-from my_project_name.config import Config
-from my_project_name.storage import Storage
-
+import logging
 import requests
 import json
+from urllib.parse import urljoin
+from nio import AsyncClient, MatrixRoom, RoomMessageText
+from my_project_name.helper import prepare_msg
+from my_project_name.storage import Storage
+from my_project_name.config import Config
+from my_project_name.chat_functions import react_to_event, send_text_to_room, send_typing_to_room
 
-
+logger = logging.getLogger()
 
 class Command:
     def __init__(
@@ -69,27 +70,49 @@ class Command:
 
         await send_typing_to_room(self.client, self.room.room_id, True, 60000)
 
+        llm_param_stop = []
+        if self.config.llm_param_stop is not "":
+            llm_param_stop.append(self.config.llm_param_stop)
+
         try:
-            model = 'stablelm-zephyr-3b:latest'
             payload = {
-                "model": model,
-                "prompt": " ".join(self.args),
-                "stream": False
+                "model": self.config.llm_model,
+                "prompt": prepare_msg(self.config.llm_msg_template, " ".join(self.args)),
+                "stream": False,
+                "options": {
+                    "seed": self.config.llm_param_seed,
+                    "num_predict": self.config.llm_param_num_predict,
+                    "top_k": self.config.llm_param_top_k,
+                    "top_p": self.config.llm_param_top_p,
+                    "repeat_last_n": self.config.llm_param_repeat_last_n,
+                    "temperature": self.config.llm_param_temp,
+                    "repeat_penalty": self.config.llm_param_repeat_penalty,
+                    "stop": llm_param_stop,
+                    "num_ctx": self.config.llm_param_num_ctx,
+                }
             }
+                
             headers = {
-                "content-type": "application/json",
-                "cache-control": "no-cache",
+                'Content-Type': 'application/json'
             }
-            url = "http://localhost:11434/api/generate" #"http://host.docker.internal:11434/api/generate"
-            response = requests.request("POST", url, data=json.dumps(payload), headers=headers)
+            url = urljoin(self.config.llm_base_url, self.config.llm_url_suffix)
+            response = requests.request("POST", url, data=json.dumps(payload), headers=headers, stream=False)
 
             if (200 <= int(response.status_code) < 300):
                 json_data = response.json()
                 await send_typing_to_room(self.client, self.room.room_id, False)
                 response = (json_data['response'])
+                logger.info(response)
                 await send_text_to_room(self.client, self.room.room_id, response)
-                toks_per_sek = int(json_data["eval_count"]) / int(json_data["eval_duration"])
-                await send_text_to_room(self.client, self.room.room_id, f'>Your request took {round(int(json_data["eval_duration"])/1000000000,3)} seconds and generated {toks_per_sek} tokens/s')
+
+                if "eval_duration" in json_data and "eval_count" in json_data:
+                    eval_dur = int(json_data["eval_duration"])
+                    eval_cnt = int(json_data['eval_count'])
+                    if eval_dur != 0 and eval_cnt != 0:
+                        toks_per_sek = eval_cnt / (eval_dur / 1e9)
+                        await send_text_to_room(self.client, self.room.room_id, f'>Your request has been answered by `{self.config.llm_model}` and took {round((eval_dur)/1000000000, 3)} seconds and generated {round(toks_per_sek, 3)} tokens/s')
+                    else: 
+                        await send_text_to_room(self.client, self.room.room_id,'>Your request took some time but couldn\'t calculate the token generation rate due to zero values of eval_duration or eval_count')
             else:
                 await send_typing_to_room(self.client, self.room.room_id, False)
                 await send_text_to_room(self.client, self.room.room_id, f"An error occurred while fetching the API({response.status_code}): {response}")

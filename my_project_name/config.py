@@ -105,6 +105,22 @@ class Config:
 
         self.command_prefix = self._get_cfg(["command_prefix"], default="!c") + " "
 
+        self.llm_base_url = self._get_cfg(["llm", "llm_base_url"], required=True)
+        self.llm_url_suffix = self._get_cfg(["llm", "llm_url_suffix"], required=True)
+        self.llm_model = self._get_cfg(["llm", "llm_model"], required=True)
+
+        self.llm_param_temp = self._get_cfg(["llm", "llm_param_temp"], default=0.7)
+        self.llm_param_num_ctx = self._get_cfg(["llm", "llm_param_num_ctx"], default=215)
+        self.llm_param_num_predict = self._get_cfg(["llm", "llm_param_num_predict"], default=-1)
+        self.llm_param_repeat_last_n = self._get_cfg(["llm", "llm_param_repeat_last_n"], default=64)
+        self.llm_param_repeat_penalty = self._get_cfg(["llm", "llm_param_repeat_penalty"], default=1.2)
+        self.llm_param_seed = self._get_cfg(["llm", "llm_param_seed"], default=-1)
+        self.llm_param_top_k = self._get_cfg(["llm", "llm_param_top_k"], default=40)
+        self.llm_param_top_p = self._get_cfg(["llm", "llm_param_top_p"], default=0.95)
+        self.llm_param_stop = self._get_cfg(["llm", "llm_param_stop"], default="")
+        self.llm_msg_template = self._get_cfg(["llm", "llm_msg_template"], default="")
+        logger.info(f'LLM config ({self.llm_base_url}, {self.llm_url_suffix}, {self.llm_model})')
+
     def _get_cfg(
         self,
         path: List[str],
