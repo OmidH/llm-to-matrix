@@ -3,7 +3,8 @@ import requests
 import json
 from urllib.parse import urljoin
 from nio import AsyncClient, MatrixRoom, RoomMessageText
-from my_project_name.helper import prepare_msg
+from my_project_name.helper import prepare_msg, validate_url
+from my_project_name.parser.parser import get_main_content
 from my_project_name.storage import Storage
 from my_project_name.config import Config
 from my_project_name.chat_functions import react_to_event, send_text_to_room, send_typing_to_room
@@ -53,12 +54,66 @@ class Command:
             await self._show_help()
         elif self.command.startswith("cm"):
             await self._query_llm_with_name()
+        elif self.command.startswith("li"):
+            await self._query_llm_for_summery()
+        elif self.command.startswith("ls"):
+            await self._query_for_available_llms()
+        elif self.command.startswith("code"):
+            await self._query_for_code()
         else:
             await self._query_llm()
             # await self._unknown_command()
     
+    async def _query_for_code(self):
+        """Make the bot forward the query to llm for code generation and wait for an answer"""
+        message = " ".join(self.args[0::]).strip()
+
+        await self.send_llm_message(model="deepseek-coder-6.7b-instruct:latest", message=f"Please generate a short and accurate code snippet based on the following specifications. The code should be precise, efficient, and adhere closely to the requirements. Ensure the solution is concise and to the point.\n{message}")
+
+    async def _query_for_available_llms(self):
+        await send_typing_to_room(self.client, self.room.room_id, True)
+        try:                
+            headers = {
+                'Content-Type': 'application/json'
+            }
+            url = urljoin(self.config.llm_base_url, self.config.llm_tags_suffix)
+            response = requests.request("GET", url, headers=headers, stream=False)
+
+            if (200 <= int(response.status_code) < 300):
+                json_data = response.json()
+                await send_typing_to_room(self.client, self.room.room_id, False)
+                model_names = [model['name'] for model in json_data['models']]
+                model_names = '\n'.join(f"⭑ {name}" for name in model_names)
+                await send_text_to_room(self.client, self.room.room_id, f"Available models:\n{model_names}", markdown_convert=True)
+        except requests.RequestException as e :
+            await send_typing_to_room(self.client, self.room.room_id, False)
+            await send_text_to_room(self.client, self.room.room_id, f"An unknown error: {e}")
+            print('Error Occurred', e)
+
+
+    async def _query_llm_for_summery(self):
+        """Make the bot forward the query to llm for summerization and wait for an answer"""
+        link = None
+        if self.args:
+            link = self.args[0]
+
+        message = " ".join(self.args[1::]).strip()
+
+        if len(message) > 0:
+            await send_text_to_room(self.client, self.room.room_id, f"This part of the message will be ignored\n>{message}", markdown_convert=True)
+
+        is_valid_url, parsed_url = validate_url(link)
+
+        if not is_valid_url:
+            await send_text_to_room(self.client, self.room.room_id, f"The given URL is invalid\n>{link}", markdown_convert=True)
+
+        content = get_main_content(parsed_url)
+
+        # logger.info(f"summery 1: {link} 2: {message} 3: {content}")
+        await self.send_llm_message(model="mistral-7b-instruct:latest", message=f"Please provide a brief summary of the following content, ensuring to use the same language as the original. Keep the summary concise.\n\n---\n{content}\n---\nEnd of content.")
+
     async def _query_llm_with_name(self):
-        """Make the bot forward the query to llm and wait for an answer"""
+        """Make the bot forward the query to a specific llm and wait for an answer"""
         model = None
         if self.args:    
             model = self.args[0]
@@ -110,7 +165,7 @@ class Command:
                 json_data = response.json()
                 await send_typing_to_room(self.client, self.room.room_id, False)
                 response = (json_data['response'])
-                logger.info(response)
+                # logger.info(response)
                 await send_text_to_room(self.client, self.room.room_id, response, markdown_convert=True)
 
                 if "eval_duration" in json_data and "eval_count" in json_data:
@@ -153,7 +208,7 @@ class Command:
         """Show the help text"""
         if not self.args:
             text = (
-                "Hello, I am a bot made with matrix-nio! Use `help commands` to view "
+                f"Hello, I am {self.config.llm_name}! Use `help commands` to view "
                 "available commands."
             )
             await send_text_to_room(self.client, self.room.room_id, text)
@@ -163,7 +218,13 @@ class Command:
         if topic == "rules":
             text = "These are the rules!"
         elif topic == "commands":
-            text = "Available commands: `q`: special query to llm (not yet implemented): q stablelm-zephyr-3b:latest _your query_"
+            text = (
+                "Available commands: \n"
+                "• `ls`: List all available models\n"
+                "• `cm`: Query a custom model. Example: `cm stablelm-zephyr-3b:latest _your query_`\n"
+                "• `li`: Summerize link. Example: `li https://www.sayhy.chat`\n"
+                "• `code`: generate code. Example: `code give me a typescript function that mirrors a given string`\n"
+                )
         else:
             text = "Unknown help topic!"
         await send_text_to_room(self.client, self.room.room_id, text)

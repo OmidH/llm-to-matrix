@@ -105,8 +105,10 @@ class Config:
 
         self.command_prefix = self._get_cfg(["command_prefix"], default="!c") + " "
 
+        self.llm_name = self._get_cfg(["llm", "llm_name"], default="Bot")
         self.llm_base_url = self._get_cfg(["llm", "llm_base_url"], required=True)
         self.llm_url_suffix = self._get_cfg(["llm", "llm_url_suffix"], required=True)
+        self.llm_tags_suffix = self._get_cfg(["llm", "llm_tags_suffix"], required=True)
         self.llm_model = self._get_cfg(["llm", "llm_model"], required=True)
 
         self.llm_param_temp = self._get_cfg(["llm", "llm_param_temp"], default=0.7)

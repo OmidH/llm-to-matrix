@@ -34,6 +34,7 @@ setup(
         "matrix-nio[e2e]>=0.23.0",
         "Markdown2[all]>=2.4.11",
         "PyYAML>=5.1.2",
+        "beautifulsoup4",
     ],
     extras_require={
         "postgres": ["psycopg2>=2.8.5"],
