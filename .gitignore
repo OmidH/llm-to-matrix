@@ -24,3 +24,4 @@ config.yaml
 
 # Log files
 *.log
+.DS_Store

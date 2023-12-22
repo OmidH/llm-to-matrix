@@ -15,10 +15,12 @@ from nio import (
     RoomMessageText,
     UnknownEvent,
 )
+# from my_project_name.storage import Storage
+from my_project_name.conversation_store import ConversationStore
 
 from my_project_name.callbacks import Callbacks
 from my_project_name.config import Config
-from my_project_name.storage import Storage
+
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +39,7 @@ async def main():
     config = Config(config_path)
 
     # Configure the database
-    store = Storage(config.database)
+    store = ConversationStore(database_config=config.database)
 
     # Configuration options for the AsyncClient
     client_config = AsyncClientConfig(

@@ -3,9 +3,10 @@ import requests
 import json
 from urllib.parse import urljoin
 from nio import AsyncClient, MatrixRoom, RoomMessageText
+from my_project_name.conversation_store import ConversationStore, MessageType, Role
 from my_project_name.helper import prepare_msg, validate_url
 from my_project_name.parser.parser import get_main_content
-from my_project_name.storage import Storage
+# from my_project_name.storage import Storage
 from my_project_name.config import Config
 from my_project_name.chat_functions import react_to_event, send_text_to_room, send_typing_to_room
 
@@ -15,7 +16,7 @@ class Command:
     def __init__(
         self,
         client: AsyncClient,
-        store: Storage,
+        store: ConversationStore,
         config: Config,
         command: str,
         room: MatrixRoom,
@@ -63,16 +64,19 @@ class Command:
         else:
             await self._query_llm()
             # await self._unknown_command()
-    
+
     async def _query_for_code(self):
         """Make the bot forward the query to llm for code generation and wait for an answer"""
+        model = "deepseek-coder-6.7b-instruct:latest"
         message = " ".join(self.args[0::]).strip()
-
-        await self.send_llm_message(model="deepseek-coder-6.7b-instruct:latest", message=f"Please generate a short and accurate code snippet based on the following specifications. The code should be precise, efficient, and adhere closely to the requirements. Ensure the solution is concise and to the point.\n{message}")
+        prompt = f"Please generate a short and accurate code snippet based on the following specifications. The code should be precise, efficient, and adhere closely to the requirements. Ensure the solution is concise and to the point.\n{message}"
+        logger.info(self.event.event_id)
+        self.store.add_message(message, self.event.sender, Role.USER, MessageType.CODE, None, prompt, self.event.event_id)
+        await self.send_llm_message(model=model, message=prompt, messageType=MessageType.CODE, event_id=self.event.event_id)
 
     async def _query_for_available_llms(self):
         await send_typing_to_room(self.client, self.room.room_id, True)
-        try:                
+        try:
             headers = {
                 'Content-Type': 'application/json'
             }
@@ -108,39 +112,46 @@ class Command:
             await send_text_to_room(self.client, self.room.room_id, f"The given URL is invalid\n>{link}", markdown_convert=True)
 
         content = get_main_content(parsed_url)
-
-        # logger.info(f"summery 1: {link} 2: {message} 3: {content}")
-        await self.send_llm_message(model="mistral-7b-instruct:latest", message=f"Please provide a brief summary of the following content, ensuring to use the same language as the original. Keep the summary concise.\n\n---\n{content}\n---\nEnd of content.")
+        model = "mistral-7b-instruct:latest"
+        prompt = f"Please provide a brief summary of the following content, ensuring to use the same language as the original. Keep the summary concise.\n\n---\n{content}\n---\nEnd of content."
+        self.store.add_message(parsed_url, self.event.sender, Role.USER, MessageType.LINK, model, prompt, self.event.event_id)
+        await self.send_llm_message(model=model, message=prompt, messageType=MessageType.LINK, event_id=self.event.event_id)
 
     async def _query_llm_with_name(self):
         """Make the bot forward the query to a specific llm and wait for an answer"""
         model = None
-        if self.args:    
+        if self.args:
             model = self.args[0]
-        
+
         message = " ".join(self.args[1::])
-        await self.send_llm_message(model=model, message=message)
-        
+
+        self.store.add_message(message, self.event.sender, Role.USER, MessageType.CUSTOM, model, None, self.event.event_id)
+        await self.send_llm_message(model=model, message=message, messageType=MessageType.CUSTOM, event_id=self.event.event_id)
+
 
     async def _query_llm(self):
         """Make the bot forward the query to llm and wait for an answer"""
-        await self.send_llm_message(message=" ".join(self.args))
+        message = " ".join(self.args)
+        self.store.add_message(message, self.event.sender, Role.USER, MessageType.DEFAULT, self.config.llm_model, None, self.event.event_id)
+        await self.send_llm_message(message=message, event_id=self.event.event_id)
 
-    async def send_llm_message(self, model=None, message=''):
+    async def send_llm_message(self, model=None, message='', messageType=MessageType.DEFAULT, event_id=None):
         await send_typing_to_room(self.client, self.room.room_id, True, 60000)
 
         llm_param_stop = []
-        if self.config.llm_param_stop is not "" and model is None:
+        if self.config.llm_param_stop != "" and model is None:
             llm_param_stop.append(self.config.llm_param_stop)
 
         model_name = self.config.llm_model
         if model is not None:
             model_name = model
 
+        prompt = prepare_msg(self.config.llm_msg_template, message) if model is None else message
+
         try:
             payload = {
                 "model": model_name,
-                "prompt": prepare_msg(self.config.llm_msg_template, message) if model is None else message,
+                "prompt": prompt,
                 "stream": False,
                 "options": {
                     "seed": self.config.llm_param_seed,
@@ -154,7 +165,7 @@ class Command:
                     "num_ctx": self.config.llm_param_num_ctx,
                 }
             }
-                
+
             headers = {
                 'Content-Type': 'application/json'
             }
@@ -165,7 +176,8 @@ class Command:
                 json_data = response.json()
                 await send_typing_to_room(self.client, self.room.room_id, False)
                 response = (json_data['response'])
-                # logger.info(response)
+                
+                self.store.add_message(response, self.client.user_id, Role.ASSISTANT, messageType, model_name, prompt, event_id)
                 await send_text_to_room(self.client, self.room.room_id, response, markdown_convert=True)
 
                 if "eval_duration" in json_data and "eval_count" in json_data:
@@ -174,13 +186,13 @@ class Command:
                     if eval_dur != 0 and eval_cnt != 0:
                         toks_per_sek = eval_cnt / (eval_dur / 1e9)
                         await send_text_to_room(self.client, self.room.room_id, f'>Your request has been answered by `{model_name}` and took {round((eval_dur)/1000000000, 3)} seconds and generated {round(toks_per_sek, 3)} tokens/s')
-                    else: 
+                    else:
                         await send_text_to_room(self.client, self.room.room_id,'>Your request took some time but couldn\'t calculate the token generation rate due to zero values of eval_duration or eval_count')
             else:
                 await send_typing_to_room(self.client, self.room.room_id, False)
                 await send_text_to_room(self.client, self.room.room_id, f"An error occurred while fetching the API({response.status_code}): {response}")
-    
-        except requests.RequestException as e :  
+
+        except requests.RequestException as e :
             await send_typing_to_room(self.client, self.room.room_id, False)
             await send_text_to_room(self.client, self.room.room_id, f"An unknown error: {e}")
             print('Error Occurred', e)
