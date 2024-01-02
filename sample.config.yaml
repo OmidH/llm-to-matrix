@@ -48,23 +48,38 @@ logging:
     # Whether logging to the console is enabled
     enabled: true
 
-# Default llm values
+# Default llm values (based on ollama params)
 llm:
+  # Defines the name of the LLM instance
   llm_name: "Chatbot"
+  # Specifies the base URL where the LLM service is hosted. 
   llm_base_url: http://localhost:11434/ # http://host.docker.internal:11434/
+  # This is the endpoint suffix used for generating responses. When combined with the base URL, it forms the complete URL for the generate API.
   llm_url_suffix: "/api/generate"
+  # Endpoint suffix for retrieving tags or metadata associated with the LLM responses.
   llm_tags_suffix: "/api/tags"
+  # Sets the temperature parameter for the LLM. Temperature controls randomness in response generation;
   llm_param_temp: 0.6
+  # Specifies the number of context tokens the model considers when generating a response.
   llm_param_num_ctx: 8192
+  # Defines the number of tokens the model should predict. -1 often implies no specific limit, allowing the model to determine the appropriate response length.
   llm_param_num_predict: -1
+  # Sets a mechanism to penalize or prevent the repetition of the last N tokens
   llm_param_repeat_last_n: 64
+  # Adjusts the penalty for repeating content. A value above 1 (like 1.2) discourages repetition.
   llm_param_repeat_penalty: 1.2
+  # Sets the random seed for response generation, ensuring reproducibility of responses if the same input is given. You can also set -1.
   llm_param_seed: 42
+  # The top-K sampling parameter, which restricts the model's predictions to the top 40 most likely next tokens.
   llm_param_top_k: 40
+  # The top-P or nucleus sampling parameter, where the model considers a subset of likely tokens that cumulatively make up 95% probability.
   llm_param_top_p: 0.95
+  # Specifies the model being used
   llm_model: "mistral-7b-instruct:latest"
+  # Defines a list of stop tokens or sequences. These are used as signals to end the response generation.
   llm_param_stop: 
     - "<|im_start|>user"
     - "</s>"
     - "<|user|>"
+  # This line defines a template for formatting messages sent to the LLM.
   llm_msg_template: "{message}"
