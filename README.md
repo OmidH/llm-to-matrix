@@ -1,13 +1,15 @@
-# Nio Template [![Built with matrix-nio](https://img.shields.io/badge/built%20with-matrix--nio-brightgreen)](https://github.com/poljar/matrix-nio) <a href="https://matrix.to/#/#nio-template:matrix.org"><img src="https://img.shields.io/matrix/nio-template:matrix.org?color=blue&label=Join%20the%20Matrix%20Room&server_fqdn=matrix-client.matrix.org" /></a>
+# Nio Template [![Built with matrix-nio](https://img.shields.io/badge/built%20with-matrix--nio-brightgreen)](https://github.com/poljar/matrix-nio)
 
 A template for creating bots with
 [matrix-nio](https://github.com/poljar/matrix-nio). The documentation for
 matrix-nio can be found
 [here](https://matrix-nio.readthedocs.io/en/latest/nio.html).
 
-This repo contains a working Matrix echo bot that can be easily extended to your needs. Detailed documentation is included as well as a step-by-step guide on basic bot building.
+This repo contains a working Matrix llm bot. It requieres [ollama](https://github.com/jmorganca/ollama/) for inference. Detailed documentation is included as well as a step-by-step guide on basic bot building.
 
 Features include out-of-the-box support for:
+
+_(provided by [nio-template](https://github.com/anoadragon453/nio-template))_
 
 * Bot commands
 * SQLite3 and Postgres database backends
@@ -16,26 +18,9 @@ Features include out-of-the-box support for:
 * Docker
 * Participation in end-to-end encrypted rooms
 
-## Projects using nio-template
+_(added by me)_
 
-* [anoadragon453/matrix-reminder-bot](https://github.com/anoadragon453/matrix-reminder-bot
-) - A matrix bot to remind you about things
-* [gracchus163/hopeless](https://github.com/gracchus163/hopeless) - COREbot for the Hope2020 conference Matrix server
-* [alturiak/nio-smith](https://github.com/alturiak/nio-smith) - A modular bot for @matrix-org that can be dynamically
-extended by plugins
-* [anoadragon453/msc-chatbot](https://github.com/anoadragon453/msc-chatbot) - A matrix bot for matrix spec proposals
-* [anoadragon453/matrix-episode-bot](https://github.com/anoadragon453/matrix-episode-bot) - A matrix bot to post episode links
-* [TheForcer/vision-nio](https://github.com/TheForcer/vision-nio) - A general purpose matrix chatbot
-* [anoadragon453/drawing-challenge-bot](https://github.com/anoadragon453/drawing-challenge-bot) - A matrix bot to
-post historical, weekly art challenges from reddit to a room
-* [8go/matrix-eno-bot](https://github.com/8go/matrix-eno-bot) - A bot to be used as a) personal assistant or b) as 
-an admin tool to maintain your Matrix installation or server
-* [elokapina/bubo](https://github.com/elokapina/bubo) - Matrix bot to help with community management
-* [elokapina/middleman](https://github.com/elokapina/middleman) - Matrix bot to act as a middleman, for example as a support bot
-* [chc4/matrix-pinbot](https://github.com/chc4/matrix-pinbot) - Matrix bot for pinning messages to a dedicated channel
-
-Want your project listed here? [Edit this
-page!](https://github.com/anoadragon453/nio-template/edit/master/README.md)
+* llm support
 
 ## Getting started
 
@@ -152,9 +137,3 @@ method for sending formatted messages to a room.
 
 Custom error types for the bot. Currently there's only one special type that's
 defined for when a error is found while the config file is being processed.
-
-## Questions?
-
-Any questions? Please ask them in
-[#nio-template:amorgan.xyz](https://matrix.to/#/!vmWBOsOkoOtVHMzZgN:amorgan.xyz?via=amorgan.xyz)
-and we'll help you out!
