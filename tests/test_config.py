@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import Mock
 
-from my_project_name.config import Config
-from my_project_name.errors import ConfigError
+from llm_to_matrix.config import Config
+from llm_to_matrix.errors import ConfigError
 
 
 class ConfigTestCase(unittest.TestCase):

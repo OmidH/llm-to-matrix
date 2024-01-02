@@ -15,11 +15,11 @@ from nio import (
     RoomMessageText,
     UnknownEvent,
 )
-# from my_project_name.storage import Storage
-from my_project_name.conversation_store import ConversationStore
+# from llm_to_matrix.storage import Storage
+from llm_to_matrix.conversation_store import ConversationStore
 
-from my_project_name.callbacks import Callbacks
-from my_project_name.config import Config
+from llm_to_matrix.callbacks import Callbacks
+from llm_to_matrix.config import Config
 
 
 logger = logging.getLogger(__name__)

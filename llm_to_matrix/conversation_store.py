@@ -1,6 +1,6 @@
 
 from typing import Dict
-from my_project_name.storage import Storage
+from llm_to_matrix.storage import Storage
 from enum import Enum
 
 

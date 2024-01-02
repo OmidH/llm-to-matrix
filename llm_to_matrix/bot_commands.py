@@ -3,12 +3,12 @@ import requests
 import json
 from urllib.parse import urljoin
 from nio import AsyncClient, MatrixRoom, RoomMessageText
-from my_project_name.conversation_store import ConversationStore, MessageType, Role
-from my_project_name.helper import prepare_msg, validate_url
-from my_project_name.parser.parser import get_main_content
-# from my_project_name.storage import Storage
-from my_project_name.config import Config
-from my_project_name.chat_functions import react_to_event, send_text_to_room, send_typing_to_room
+from llm_to_matrix.conversation_store import ConversationStore, MessageType, Role
+from llm_to_matrix.helper import prepare_msg, validate_url
+from llm_to_matrix.parser.parser import get_main_content
+# from llm_to_matrix.storage import Storage
+from llm_to_matrix.config import Config
+from llm_to_matrix.chat_functions import react_to_event, send_text_to_room, send_typing_to_room
 
 logger = logging.getLogger()
 

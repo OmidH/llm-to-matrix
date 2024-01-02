@@ -1,0 +1,16 @@
+[Unit]
+Description=A matrix bot that does amazing things!
+
+[Service]
+Type=simple
+User=llm-to-matrix
+Group=llm-to-matrix
+WorkingDirectory=/path/to/llm-to-matrix/docker
+ExecStart=/usr/bin/docker-compose up llm-to-matrix
+ExecStop=/usr/bin/docker-compose stop llm-to-matrix
+RemainAfterExit=yes
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
