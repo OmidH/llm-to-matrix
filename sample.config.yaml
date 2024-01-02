@@ -47,3 +47,24 @@ logging:
   console_logging:
     # Whether logging to the console is enabled
     enabled: true
+
+# Default llm values
+llm:
+  llm_name: "Chatbot"
+  llm_base_url: http://localhost:11434/ # http://host.docker.internal:11434/
+  llm_url_suffix: "/api/generate"
+  llm_tags_suffix: "/api/tags"
+  llm_param_temp: 0.6
+  llm_param_num_ctx: 8192
+  llm_param_num_predict: -1
+  llm_param_repeat_last_n: 64
+  llm_param_repeat_penalty: 1.2
+  llm_param_seed: 42
+  llm_param_top_k: 40
+  llm_param_top_p: 0.95
+  llm_model: "mistral-7b-instruct:latest"
+  llm_param_stop: 
+    - "<|im_start|>user"
+    - "</s>"
+    - "<|user|>"
+  llm_msg_template: "{message}"
