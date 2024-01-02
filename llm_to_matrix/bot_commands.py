@@ -233,10 +233,10 @@ class Command:
         elif topic == "commands":
             text = (
                 "Available commands: \n"
-                "• `ls`: List all available models\n"
-                "• `cm`: Query a custom model. Example: `cm stablelm-zephyr-3b:latest _your query_`\n"
-                "• `li`: Summerize link. Example: `li https://www.sayhy.chat`\n"
-                "• `code`: generate code. Example: `code give me a typescript function that mirrors a given string`\n"
+                "• `ls`: Lists all available models.\n"
+                "• `cm`: Queries a custom model. Example: `cm stablelm-zephyr-3b:latest _your query_`.\n"
+                "• `li`: Summarizes the content of a link. Example: `li https://www.example.com`.\n"
+                "• `code`: Generates code based on a given prompt. Example: `code give me a typescript function that mirrors a given string`.\n"
                 )
         else:
             text = "Unknown help topic!"

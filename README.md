@@ -1,28 +1,34 @@
-# Nio Template [![Built with matrix-nio](https://img.shields.io/badge/built%20with-matrix--nio-brightgreen)](https://github.com/poljar/matrix-nio)
+# LLM-to-Matrix [![Built with matrix-nio](https://img.shields.io/badge/built%20with-matrix--nio-brightgreen)](https://github.com/poljar/matrix-nio)
 
-A template for creating bots with
-[matrix-nio](https://github.com/poljar/matrix-nio). The documentation for
-matrix-nio can be found
-[here](https://matrix-nio.readthedocs.io/en/latest/nio.html).
+A template for creating bots with [matrix-nio](https://github.com/poljar/matrix-nio). The documentation for matrix-nio can be found [here](https://matrix-nio.readthedocs.io/en/latest/nio.html).
 
-This repo contains a working Matrix llm bot. It requieres [ollama](https://github.com/jmorganca/ollama/) for inference. Detailed documentation is included as well as a step-by-step guide on basic bot building.
+This repo contains a working Matrix LLM bot. It requires [ollama](https://github.com/jmorganca/ollama/) for inference. Detailed documentation is included, as well as a step-by-step guide on basic bot building.
 
 Features include out-of-the-box support for:
 
 _(provided by [nio-template](https://github.com/anoadragon453/nio-template))_
 
-* Bot commands
-* SQLite3 and Postgres database backends
-* Configuration files
-* Multi-level logging
-* Docker
-* Participation in end-to-end encrypted rooms
+- Bot commands
+- SQLite3 and Postgres database backends
+- Configuration files
+- Multi-level logging
+- Docker
+- Participation in end-to-end encrypted rooms
 
 _(added by me)_
 
-* llm support
+- LLM support
 
-## Getting started
+## Available Commands
+
+The bot supports several commands, each with specific functionalities:
+
+- `ls`: Lists all available models.
+- `cm`: Queries a custom model. Example: `cm stablelm-zephyr-3b:latest _your query_`.
+- `li`: Summarizes the content of a link. Example: `li https://www.example.com`.
+- `code`: Generates code based on a given prompt. Example: `code give me a typescript function that mirrors a given string`.
+
+## Getting Started
 
 See [SETUP.md](SETUP.md) for how to setup and run the template project.
 
