@@ -114,7 +114,7 @@ class Command:
         content = get_main_content(parsed_url)
         model = "mistral-7b-instruct:latest"
         prompt = f"Please provide a brief summary of the following content, ensuring to use the same language as the original. Keep the summary concise.\n\n---\n{content}\n---\nEnd of content."
-        self.store.add_message(parsed_url, self.event.sender, Role.USER, MessageType.LINK, model, prompt, self.event.event_id)
+        self.store.add_message(parsed_url, self.event.sender, Role.USER, MessageType.LINK, None, prompt, self.event.event_id)
         await self.send_llm_message(model=model, message=prompt, messageType=MessageType.LINK, event_id=self.event.event_id)
 
     async def _query_llm_with_name(self):
@@ -125,14 +125,14 @@ class Command:
 
         message = " ".join(self.args[1::])
 
-        self.store.add_message(message, self.event.sender, Role.USER, MessageType.CUSTOM, model, None, self.event.event_id)
+        self.store.add_message(message, self.event.sender, Role.USER, MessageType.CUSTOM, None, None, self.event.event_id)
         await self.send_llm_message(model=model, message=message, messageType=MessageType.CUSTOM, event_id=self.event.event_id)
 
 
     async def _query_llm(self):
         """Make the bot forward the query to llm and wait for an answer"""
         message = " ".join(self.args)
-        self.store.add_message(message, self.event.sender, Role.USER, MessageType.DEFAULT, self.config.llm_model, None, self.event.event_id)
+        self.store.add_message(message, self.event.sender, Role.USER, MessageType.DEFAULT, None, None, self.event.event_id)
         await self.send_llm_message(message=message, event_id=self.event.event_id)
 
     async def send_llm_message(self, model=None, message='', messageType=MessageType.DEFAULT, event_id=None):
@@ -176,6 +176,7 @@ class Command:
                 json_data = response.json()
                 await send_typing_to_room(self.client, self.room.room_id, False)
                 response = (json_data['response'])
+                response = response.replace('<0x0A>', '\n') # some models have inconsistencies and use <0x0A> as \n
                 
                 self.store.add_message(response, self.client.user_id, Role.ASSISTANT, messageType, model_name, prompt, event_id)
                 await send_text_to_room(self.client, self.room.room_id, response, markdown_convert=True)
